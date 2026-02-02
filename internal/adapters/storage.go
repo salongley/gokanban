@@ -38,7 +38,17 @@ func (s *InMemoryService) Create(title, column string) models.Card {
 	return card
 }
 
-func (s *InMemoryService) Update(id int, title string) models.Card {
-	return models.Card{ID: id, Title: title}
+func (s *InMemoryService) Update(id int, card models.Card) models.Card {
+	s.Lock()
+	defer s.Unlock()
+	return models.Card{ID: id, Title: card.Title, Column: card.Column}
 }
-func (s *InMemoryService) Find(id int) models.Card { return models.Card{ID: id, Title: "Found"} }
+func (s *InMemoryService) Find(id int) models.Card {
+	for _, card := range s.cards {
+		if card.ID == id {
+			return card
+		}
+	}
+
+	return models.Card{}
+}

@@ -6,6 +6,6 @@ import "gokanban/internal/models"
 type CardService interface {
 	List() []models.Card
 	Create(title, column string) models.Card
-	Update(id int, title string) models.Card
+	Update(id int, card models.Card) models.Card
 	Find(id int) models.Card
 }

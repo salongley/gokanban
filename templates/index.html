@@ -1,58 +1,99 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-	<head>
-		<script src="https://unpkg.com/htmx.org@1.9.10"></script>
-		<style>
-			body {
-				font-family: sans-serif;
-				background: #333;
-				color: white;
-				padding: 20px;
-			}
-			.board {
-				display: flex;
-				gap: 20px;
-			}
-			.column {
-				background: #eee;
-				color: black;
-				padding: 10px;
-				width: 300px;
-				border-radius: 5px;
-			}
-			.card {
-				background: white;
-				padding: 10px;
-				margin-bottom: 5px;
-				cursor: pointer;
-				border-radius: 3px;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="board">
-			<div class="column">
-				<h3>To Do</h3>
-				<div id="todo-list">
-					{{ range .Cards }}{{ if eq .Column "todo" }}{{ template
-					"card.html" . }}{{ end }}{{ end }}
-				</div>
-				<form
-					hx-post="/cards"
-					hx-target="#todo-list"
-					hx-swap="beforeend"
-					hx-on::after-request="this.reset()"
-				>
-					<input type="hidden" name="column" value="todo" />
-					<input
-						type="text"
-						name="title"
-						placeholder="New Task..."
-						required
-					/>
-					<button>Add</button>
-				</form>
-			</div>
-		</div>
-	</body>
+<head>
+    <meta charset="UTF-8">
+    <title>GoKanban with HTMX</title>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    
+    <style>
+        body { font-family: sans-serif; background: #333; color: white; padding: 2rem; }
+        .board { display: flex; gap: 20px; justify-content: center; align-items: flex-start; }
+        .column { background: #ebecf0; color: #172b4d; padding: 10px; width: 300px; border-radius: 5px; display: flex; flex-direction: column; gap: 10px; }
+        
+        /* Add a min-height so empty columns are still droppable targets */
+        .card-list { min-height: 100px; }
+        
+        .card { background: white; padding: 10px; border-radius: 3px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); cursor: grab; }
+        .card:active { cursor: grabbing; }
+        
+        /* Visual cue when dragging */
+        .sortable-ghost { opacity: 0.4; background: #c8ebfb; }
+        
+        input { width: 90%; padding: 8px; margin-bottom: 5px; border: 1px solid #dfe1e6; border-radius: 3px; }
+        button { padding: 6px 12px; background: #0079bf; color: white; border: none; border-radius: 3px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align:center">Go + HTMX Kanban</h1>
+
+    <div class="board">
+
+        <div class="column">
+            <h3>To Do</h3>
+            <div id="todo-list" class="card-list" data-column="todo">
+                {{ range .Cards }}{{ if eq .Column "todo" }}{{ template "card.html" . }}{{ end }}{{ end }}
+            </div>
+            <form hx-post="/cards" hx-target="#todo-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+                <input type="hidden" name="column" value="todo">
+                <input type="text" name="title" placeholder="Add task..." required>
+                <button type="submit">Add</button>
+            </form>
+        </div>
+
+        <div class="column">
+            <h3>Doing</h3>
+            <div id="doing-list" class="card-list" data-column="doing">
+                {{ range .Cards }}{{ if eq .Column "doing" }}{{ template "card.html" . }}{{ end }}{{ end }}
+            </div>
+            <form hx-post="/cards" hx-target="#doing-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+                <input type="hidden" name="column" value="doing">
+                <input type="text" name="title" placeholder="Add task..." required>
+                <button type="submit">Add</button>
+            </form>
+        </div>
+
+        <div class="column">
+            <h3>Done</h3>
+            <div id="done-list" class="card-list" data-column="done">
+                {{ range .Cards }}{{ if eq .Column "done" }}{{ template "card.html" . }}{{ end }}{{ end }}
+            </div>
+            <form hx-post="/cards" hx-target="#done-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+                <input type="hidden" name="column" value="done">
+                <input type="text" name="title" placeholder="Add task..." required>
+                <button type="submit">Add</button>
+            </form>
+        </div>
+
+    </div>
+
+    <script>
+        // Select all card lists
+        const lists = document.querySelectorAll('.card-list');
+
+        lists.forEach(list => {
+            new Sortable(list, {
+                group: 'kanban', // Allows dragging between lists
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                onEnd: function (evt) {
+                    // Logic when drop finishes:
+                    const itemEl = evt.item;             // The card DOM element
+                    const newColumnEl = evt.to;          // The list it was dropped into
+                    
+                    // We need the Card ID (parsed from "card-1")
+                    // and the New Column ID (parsed from data-column="todo")
+                    const cardId = itemEl.id.replace('card-', '');
+                    const newStatus = newColumnEl.getAttribute('data-column');
+
+                    // Trigger HTMX request manually
+                    htmx.ajax('PATCH', '/cards/' + cardId + '/move', {
+                        values: { column: newStatus }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
 </html>

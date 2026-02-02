@@ -54,3 +54,19 @@ func (h *CardHandler) HandleEditForm(w http.ResponseWriter, r *http.Request) {
 		Data:         card,
 	})
 }
+
+// PATCH /cards/{id}/move - Move card to a new column
+func (h *CardHandler) HandleMove(w http.ResponseWriter, r *http.Request) {
+	id, _ := strconv.Atoi(r.PathValue("id"))
+	newColumn := r.FormValue("column") // 'todo', 'doing', or 'done'
+
+	// Update the data in memory
+
+	card := h.service.Find(id)
+
+	card.Column = newColumn
+	h.service.Update(id, card)
+	// We don't need to render HTML back because SortableJS has
+	// already visually moved the DOM element. We just return 200 OK.
+	w.WriteHeader(http.StatusOK)
+}
