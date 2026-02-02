@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<script src="https://unpkg.com/htmx.org@1.9.10"></script>
+		<style>
+			body {
+				font-family: sans-serif;
+				background: #333;
+				color: white;
+				padding: 20px;
+			}
+			.board {
+				display: flex;
+				gap: 20px;
+			}
+			.column {
+				background: #eee;
+				color: black;
+				padding: 10px;
+				width: 300px;
+				border-radius: 5px;
+			}
+			.card {
+				background: white;
+				padding: 10px;
+				margin-bottom: 5px;
+				cursor: pointer;
+				border-radius: 3px;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="board">
+			<div class="column">
+				<h3>To Do</h3>
+				<div id="todo-list">
+					{{ range .Cards }}{{ if eq .Column "todo" }}{{ template
+					"card.html" . }}{{ end }}{{ end }}
+				</div>
+				<form
+					hx-post="/cards"
+					hx-target="#todo-list"
+					hx-swap="beforeend"
+					hx-on::after-request="this.reset()"
+				>
+					<input type="hidden" name="column" value="todo" />
+					<input
+						type="text"
+						name="title"
+						placeholder="New Task..."
+						required
+					/>
+					<button>Add</button>
+				</form>
+			</div>
+		</div>
+	</body>
+</html>

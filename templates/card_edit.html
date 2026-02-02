@@ -1,0 +1,7 @@
+<form class="card" hx-put="/cards/{{.ID}}" hx-target="this" hx-swap="outerHTML">
+	<input type="text" name="title" value="{{.Title}}" autofocus />
+	<button type="submit">Save</button>
+	<button hx-get="/" hx-target="closest form" hx-swap="outerHTML">
+		Cancel
+	</button>
+</form>
