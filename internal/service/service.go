@@ -8,4 +8,6 @@ type CardService interface {
 	Create(title, column string) models.Card
 	Update(id int, card models.Card) models.Card
 	Find(id int) models.Card
+	Delete(id int)
+	Count() int
 }

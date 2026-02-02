@@ -24,6 +24,22 @@ func (s *InMemoryService) List() []models.Card {
 	return s.cards
 }
 
+func (s *InMemoryService) Delete(id int) {
+	{
+		s.Lock()
+		defer s.Unlock()
+		for i, card := range s.cards {
+			if card.ID == id {
+				s.cards = append(s.cards[:i], s.cards[i+1:]...)
+				return
+			}
+		}
+	}
+}
+func (s *InMemoryService) Count() int {
+	return len(s.cards)
+}
+
 func (s *InMemoryService) Create(title, column string) models.Card {
 	s.Lock()
 	defer s.Unlock()
